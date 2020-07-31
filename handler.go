@@ -17,14 +17,13 @@ func SignUp(c *gin.Context) {
 	c.BindJSON(&req)
 	// 判断是否已经存在
 	var user db.User
-	var count int
-	db.DataBase.Model(&user).Where("name = ?", req.UserName).Count(&count)
-	if count == 0 {
+	isExisted := user.Exist(req.UserName)
+	if !isExisted {
 		// 账户不存在，则注册
 		user.Name = req.UserName
 		user.Salt = common.GetRandomBoth(4)
 		user.PassWord = common.Sha1En(req.PassWord + user.Salt)
-		db.DataBase.Model(&user).Create(&user)
+		user.Create()
 		c.JSON(http.StatusOK, gin.H{"code": 200, "data": "账户创建成功", "error": ""})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"code": 400, "data": "账户已存在，请登录", "error": ""})
@@ -36,11 +35,10 @@ func LogIn(c *gin.Context) {
 	c.BindJSON(&req)
 	// 判断是否已经存在
 	var user db.User
-	var count int
-	db.DataBase.Model(&user).Where("name = ?", req.UserName).Count(&count)
-	if count != 0 {
+	isExisted := user.Exist(req.UserName)
+	if isExisted {
 		// 登录
-		db.DataBase.Model(&user).Where("name = ?", req.UserName).Find(&user)
+		user.ReadByName(req.UserName)
 		if common.Sha1En(req.PassWord+user.Salt) != user.PassWord {
 			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "用户名密码错误", "error": ""})
 			return
@@ -50,11 +48,11 @@ func LogIn(c *gin.Context) {
 		uuidStr := uuid.New().String()
 		s.UUID = uuidStr
 		s.User = user
-		db.DataBase.Model(&db.Session{}).Create(&s)
+		s.Create()
 		c.SetCookie("_sessionID", s.UUID, 3600, "/", "localhost", false, true)
 		c.JSON(http.StatusBadRequest, gin.H{"code": 200, "data": "登录成功", "error": ""})
 	} else {
-		c.JSON(http.StatusOK, gin.H{"code": 400, "data": "账户已存在，请登录", "error": ""})
+		c.JSON(http.StatusOK, gin.H{"code": 400, "data": "账户不存在，请注册", "error": ""})
 	}
 }
 
@@ -67,7 +65,7 @@ func LogOut(c *gin.Context) {
 	}
 	var s db.Session
 	s.UUID = sUUID
-	db.DataBase.Model(&db.Session{}).Unscoped().Where("uuid = ?", sUUID).Delete(&s)
+	s.Delete()
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": "注销成功", "error": ""})
 }
 
