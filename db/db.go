@@ -20,5 +20,5 @@ func Setup(user string, pwd string, host string, db string) {
 		panic("failed to connect database")
 	}
 	DataBase.DB().SetConnMaxLifetime(2 * 3600 * time.Second) // 2小时空闲链接超时
-	DataBase.AutoMigrate(&User{}, &Goods{}, &Post{})
+	DataBase.AutoMigrate(&User{}, &Goods{}, &Post{}, &Session{})
 }
