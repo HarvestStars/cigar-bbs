@@ -1,12 +1,15 @@
 package main
 
 import (
-	"github.com/HarvestStars/cigar-bbs/db"
+	"github.com/HarvestStars/cigar-bbs/server/conf"
+	"github.com/HarvestStars/cigar-bbs/server/db"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	db.Setup("root", "123", "127.0.0.1:3306", "bbs")
+	conf.Setup()
+	db.Setup(conf.MySQLSetting.User, conf.MySQLSetting.PassWord, conf.MySQLSetting.Host, conf.MySQLSetting.DataBase)
+
 	r := gin.Default()
 	r.GET("/", Index)
 
@@ -24,5 +27,5 @@ func main() {
 
 	// search 论坛内搜索
 	r.POST("/search", search)
-	r.Run(":8080")
+	r.Run(conf.ServerSetting.Host)
 }

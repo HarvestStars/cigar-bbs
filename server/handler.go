@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/HarvestStars/cigar-bbs/db"
-	"github.com/HarvestStars/cigar-bbs/protocol"
-	"github.com/HarvestStars/cigar-bbs/util/common"
+	"github.com/HarvestStars/cigar-bbs/server/db"
+	"github.com/HarvestStars/cigar-bbs/server/protocol"
+	"github.com/HarvestStars/cigar-bbs/server/util/common"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

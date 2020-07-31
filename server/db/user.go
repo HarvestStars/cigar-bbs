@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/HarvestStars/cigar-bbs/util/common"
+	"github.com/HarvestStars/cigar-bbs/server/util/common"
 	"gorm.io/gorm"
 )
 
