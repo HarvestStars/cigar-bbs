@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/HarvestStars/YuePaoTalent/db"
+	"github.com/HarvestStars/cigar-bbs/util/common"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +13,7 @@ type User struct {
 }
 
 func (u *User) Create() {
-	db.DataBase.Model(u).Create(u)
+	DataBase.Model(u).Create(u)
 }
 
 func (u *User) Exist(name string) bool {
@@ -28,4 +28,11 @@ func (u *User) Exist(name string) bool {
 
 func (u *User) ReadByName(name string) {
 	DataBase.Model(u).Where("name = ?", name).Find(u)
+}
+
+func (u *User) PassWordCmp(pwd string) bool {
+	if common.Sha1En(pwd+u.Salt) != u.PassWord {
+		return false
+	}
+	return true
 }

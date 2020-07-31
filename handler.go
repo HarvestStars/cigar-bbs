@@ -39,14 +39,15 @@ func LogIn(c *gin.Context) {
 	if isExisted {
 		// 登录
 		user.ReadByName(req.UserName)
-		if common.Sha1En(req.PassWord+user.Salt) != user.PassWord {
+		isOk := user.PassWordCmp(req.PassWord)
+		if !isOk {
 			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "用户名密码错误", "error": ""})
 			return
 		}
+
 		// add session
 		var s db.Session
-		uuidStr := uuid.New().String()
-		s.UUID = uuidStr
+		s.UUID = uuid.New().String()
 		s.User = user
 		s.Create()
 		c.SetCookie("_sessionID", s.UUID, 3600, "/", "localhost", false, true)
