@@ -15,12 +15,12 @@ type User struct {
 }
 
 func (u *User) Create() {
-	DataBase.Model(u).Create(u)
+	DataBase.Model(&User{}).Create(u)
 }
 
 func (u *User) Exist(name string) bool {
 	var count int
-	DataBase.Model(&u).Where("name = ?", name).Count(&count)
+	DataBase.Model(u).Where("name = ?", name).Count(&count)
 	if count == 0 {
 		// 账户不存在
 		return false

@@ -11,7 +11,6 @@ func main() {
 	db.Setup(conf.MySQLSetting.User, conf.MySQLSetting.PassWord, conf.MySQLSetting.Host, conf.MySQLSetting.DataBase)
 
 	r := gin.Default()
-	r.GET("/", Index)
 
 	// auth 登录
 	r.POST("/signup", SignUp)
@@ -27,5 +26,6 @@ func main() {
 
 	// search 论坛内搜索
 	r.POST("/search", search)
+
 	r.Run(conf.ServerSetting.Host)
 }

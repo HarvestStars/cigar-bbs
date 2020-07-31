@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+	<meta charset="UTF-8">
+	<title>cigarBBS</title>
+</head>
+
+<body>
+	<h2>登录</h2>
+	<form action="http://localhost:8080/login" method="post">
+	  <label for="name">用户名:</label>
+	  <input type="name" id="name" name="name" required autofocus><br>
+  
+	  <label for="password">密码:</label>
+	  <input type="password" id="password" name="password" required><br>
+	  
+	  <input type="checkbox" id="admin" name="admin" value="yes">
+	  <label for="admin">管理员</label><br>
+
+	  <input type="submit" value="登录"><br>
+  
+	  <a href="./views/signup.html">立即注册</a>
+	  <a href="./views/reset">重置密码</a>
+  
+	</form>
+</body>
+</html>

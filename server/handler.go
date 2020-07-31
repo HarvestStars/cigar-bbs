@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/HarvestStars/cigar-bbs/server/db"
-	"github.com/HarvestStars/cigar-bbs/server/protocol"
 	"github.com/HarvestStars/cigar-bbs/server/util/common"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,16 +12,16 @@ import (
 func Index(c *gin.Context) {}
 
 func SignUp(c *gin.Context) {
-	var req protocol.UserReq
-	c.BindJSON(&req)
+	userName := c.PostForm("name")
+	passWord := c.PostForm("password")
 	// 判断是否已经存在
 	var user db.User
-	isExisted := user.Exist(req.UserName)
+	isExisted := user.Exist(userName)
 	if !isExisted {
 		// 账户不存在，则注册
-		user.Name = req.UserName
+		user.Name = userName
 		user.Salt = common.GetRandomBoth(4)
-		user.PassWord = common.Sha1En(req.PassWord + user.Salt)
+		user.PassWord = common.Sha1En(passWord + user.Salt)
 		user.Create()
 		c.JSON(http.StatusOK, gin.H{"code": 200, "data": "账户创建成功", "error": ""})
 	} else {
@@ -31,15 +30,15 @@ func SignUp(c *gin.Context) {
 }
 
 func LogIn(c *gin.Context) {
-	var req protocol.UserReq
-	c.BindJSON(&req)
+	userName := c.PostForm("name")
+	passWord := c.PostForm("password")
 	// 判断是否已经存在
 	var user db.User
-	isExisted := user.Exist(req.UserName)
+	isExisted := user.Exist(userName)
 	if isExisted {
 		// 登录
-		user.ReadByName(req.UserName)
-		isOk := user.PassWordCmp(req.PassWord)
+		user.ReadByName(userName)
+		isOk := user.PassWordCmp(passWord)
 		if !isOk {
 			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "用户名密码错误", "error": ""})
 			return
@@ -61,16 +60,17 @@ func Admin(c *gin.Context) {
 	sUUID, err := c.Cookie("_sessionID")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "权限不正确, 检查cookie", "error": ""})
+		return
 	}
 	var s db.Session
 	s.UUID = sUUID
-
 }
 
 func LogOut(c *gin.Context) {
 	sUUID, err := c.Cookie("_sessionID")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求, 检查cookie", "error": ""})
+		return
 	}
 	var s db.Session
 	s.UUID = sUUID
@@ -82,6 +82,7 @@ func createPost(c *gin.Context) {
 	sUUID, err := c.Cookie("_sessionID")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求", "error": ""})
+		return
 	}
 	var s db.Session
 	s.UUID = sUUID
