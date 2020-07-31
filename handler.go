@@ -57,12 +57,20 @@ func LogIn(c *gin.Context) {
 	}
 }
 
-func Admin(c *gin.Context) {}
+func Admin(c *gin.Context) {
+	sUUID, err := c.Cookie("_sessionID")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "权限不正确, 检查cookie", "error": ""})
+	}
+	var s db.Session
+	s.UUID = sUUID
+
+}
 
 func LogOut(c *gin.Context) {
 	sUUID, err := c.Cookie("_sessionID")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求", "error": ""})
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求, 检查cookie", "error": ""})
 	}
 	var s db.Session
 	s.UUID = sUUID
@@ -76,6 +84,8 @@ func createPost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求", "error": ""})
 	}
 	var s db.Session
+	s.UUID = sUUID
+	s.IsLogIn()
 	db.DataBase.Model(&db.Session{}).Where("uuid = ?", sUUID).First(&s)
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": s.UserName, "error": ""})
 }
