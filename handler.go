@@ -60,11 +60,28 @@ func LogIn(c *gin.Context) {
 
 func Admin(c *gin.Context) {}
 
-func LogOut(c *gin.Context) {}
+func LogOut(c *gin.Context) {
+	sUUID, err := c.Cookie("_sessionID")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求", "error": ""})
+	}
+	var s db.Session
+	s.UUID = sUUID
+	db.DataBase.Model(&db.Session{}).Unscoped().Where("uuid = ?", sUUID).Delete(&s)
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": "注销成功", "error": ""})
+}
+
+func createPost(c *gin.Context) {
+	sUUID, err := c.Cookie("_sessionID")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "无效请求", "error": ""})
+	}
+	var s db.Session
+	db.DataBase.Model(&db.Session{}).Where("uuid = ?", sUUID).First(&s)
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": s.UserName, "error": ""})
+}
 
 func readPost(c *gin.Context) {}
-
-func createPost(c *gin.Context) {}
 
 func updatePost(c *gin.Context) {}
 
