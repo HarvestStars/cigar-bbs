@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="js/bootstrap-3.3.5-dist/dist/css/bootstrap.css">
+    <script src="js/http_code.jquery.com_jquery-3.1.1.js"></script>
+    <script type="text/javascript" src="js/bootstrap-3.3.5-dist/dist/js/bootstrap.js"></script>
+    <script type="text/javascript" src="js/jquery.form.js"></script>
+
+
+    <title></title>
+    <style>
+        #head{
+            background-color: black;
+            color: white;
+            margin-left: 0;
+            margin-top: 50px;
+            padding: 50px 100px 50px 100px;
+            width: 100%;
+        }
+        #mainBody{
+            padding: 50px 10% 50px 10%;
+            margin-left: 0;
+            width: 100%;
+        }
+        #welcome{
+            margin-top: 8px;
+            margin-right: 10px;
+            display: none;
+            color: rgb(0, 0, 0);
+            font-size: 14px;
+        }
+        .myheart{
+            float: left;
+            color: rgb(255, 0, 0);
+            font-size: 15px;
+            margin-left: 5%;
+            padding: 5px;
+        }
+        #comment{
+            width: 60%;
+            margin-left: 20%;
+        }
+        #myButton{
+            width: 10%;
+            margin-top: 20px;
+            margin-left: 89%;
+            color: black;
+            font-size: 16px;
+        }
+        #showComment{
+            padding: 20px;
+            width: 80%;
+            margin-left: 10%;
+        }
+        .user{
+            display: inline-block;
+            font-size: 16px;
+            width: 200px;
+        }
+        .star{
+            display: inline;
+            margin-left: 60%
+        }
+        .commentMain{
+            font-size: 14px;
+            height: 80px;
+            margin-top: 20px;
+        }
+        .commentDate{
+            display: inline;
+            font-size: 14px;color: lightslategray;margin-left: 60%;margin-top: 20px
+        }
+        .replyButton{
+            margin-top: 5px;
+            padding: 2px 2px;
+            margin-left: 50px;
+        }
+        .replyUser{
+            color: lightslategray;
+            font-size: 10px;
+        }
+        .replyMain{
+            margin-left: 15%;
+            width:70%;
+            font-size: 10px;
+            height: 50px;
+        }
+        .hideReply{
+            display: none;
+        }
+        .expandReply{
+        }
+
+    </style>
+
+    <script>
+
+        var username;
+
+        $(document).ready(function () {
+
+            $(window).bind('beforeunload',function(){
+                var logout=new XMLHttpRequest();
+                logout.open("POST","http://localhost:8080/logout?username="+username,true);
+                logout.send();
+            });
+
+           validateLogin();
+
+           var req=new XMLHttpRequest();
+           id=getUrlParam("id");
+           console.log("id= "+id);
+           req.open("Get","http://localhost:8080/readBlog?id="+id,true);
+           req.send();
+           req.onreadystatechange=function () {
+               if (req.readyState==4 && req.status==200){
+                   var post=JSON.parse(req.responseText);
+                   document.getElementById("title").innerHTML=post[0]["title"];
+                   document.getElementById("author").innerHTML=post[0]["author"];
+                   document.getElementById("date").innerHTML=(parseInt(post[0]["createDate"]["year"])%100+2000)+"-"+(parseInt(post[0]["createDate"]["month"])+1)+"-"+post[0]["createDate"]["day"];
+                   document.getElementById("scan").innerHTML=post[0]["scan"];
+                   document.getElementById("save").innerHTML=post[0]["favor"];
+                   document.getElementById("content").innerHTML=post[0]["content"];
+               }
+           };
+
+            var isFavor=new XMLHttpRequest();
+            isFavor.open("Get","/isFavor?id="+id,true);
+            isFavor.send();
+            isFavor.onreadystatechange=function () {
+                if(isFavor.readyState==4&&isFavor.status==200){
+                    console.log(isFavor.responseText)
+                    if(isFavor.responseText=="favored"){
+                        $("#favor").addClass("glyphicon glyphicon-heart").text("已收藏");
+                    }else if(isFavor.responseText=="nofavor"){
+                        $("#favor").addClass("glyphicon glyphicon-heart-empty").text("收藏");
+                    }else if(isFavor.responseText=="nouser"){
+                        $("#favor").text("尚未登录");
+                    }
+                }
+            };
+
+
+            //收藏
+           $("#favor").click(function () {
+               if($(this).text()=="收藏"){
+                   $("#favor").removeClass("glyphicon glyphicon-heart-empty").addClass("glyphicon glyphicon-heart").text("已收藏");
+                   incrementFavor(1);
+               }else if($(this).text()=="已收藏"){
+                   $("#favor").removeClass("glyphicon glyphicon-heart").addClass("glyphicon glyphicon-heart-empty").text("收藏");
+                   incrementFavor(-1);
+               }
+
+           });
+
+
+               var commentsReq=new XMLHttpRequest();
+               commentsReq.open("GET","http://localhost:8080/getComments?id="+id,true);
+               commentsReq.send();
+               commentsReq.onreadystatechange=function () {
+                   if(commentsReq.readyState==4&&commentsReq.status==200){
+                       console.log(commentsReq.responseText);
+                       var comment=JSON.parse(commentsReq.responseText);
+                        console.log(comment.length);
+                       for(var i=0;i<comment.length;i++){
+                           console.log("i: "+i);
+                           $("#showComment").append("<div id='comment_"+comment[i]["id"]+"'>" +
+                               "<a href='userinfo.html?hisName="+comment[i]["user"]+"'><label class='user'>"+"用户： "+comment[i]["user"]+"</label></a>" +
+                               "<a><span id='star_"+comment[i]["id"]+"' class='star glyphicon glyphicon-thumbs-up btn btn-default' onclick='increStar("+comment[i]["id"]+","+comment[i]["star"]+")'>"+comment[i]["star"]+"</span></a>" +
+                               "<span class='commentMain form-control'>"+comment[i]["content"]+"</span>"+
+                               "<button class='btn btn-default replyButton glyphicon glyphicon-edit' onclick='reply("+comment[i]["id"]+")'>reply</button> " +
+                               "<a><span id='arrow' class='glyphicon glyphicon-arrow-down' style='margin-left: 30%' onclick='hideReply("+i+")'></span></a>"+
+                               "<label class='commentDate'>"+(parseInt(comment[i]["date"]["year"])%100+2000)+"-"+(parseInt(comment[i]["date"]["month"])+1)+"-"+comment[i]["date"]["date"]
+                               +" "+comment[i]["date"]["hours"]+":"+comment[i]["date"]["minutes"]+":"+comment[i]["date"]["seconds"]+"</label>" +
+                               "</div><hr>");
+
+                               for(var k=0;k<comment[i]["replys"].length;k++){
+                                   $("#showComment").append("<div class='hideReply hideReply_"+i+"'>" +
+                                       "<a href='userinfo.html?hisName="+comment[i]["replys"][k]["username"]+"'><label class='replyUser'>"+comment[i]["replys"][k]["username"]+"回复:"+"</label></a>"+
+                                       "<span class='replyMain form-control'>"+comment[i]["replys"][k]["content"]+"</span>"+
+                                       "</div>");
+                               }
+                           $("#showComment").append("<hr>");
+
+                       }
+
+                  
+//             
+                   }
+               };
+
+
+
+
+        });
+
+
+
+        function hideReply(i) {
+            if ($(".hideReply_"+i).hasClass("hideReply")){
+                $(".hideReply_"+i).removeClass("hideReply");
+                $("#arrow").removeClass("glyphicon-arrow-down").addClass("glyphicon-arrow-up");
+            }else {
+                $(".hideReply_"+i).addClass("hideReply");
+                $("#arrow").removeClass("glyphicon-arrow-up").addClass("glyphicon-arrow-down");
+            }
+
+        }
+
+        function reply(commentId) {
+            $("#comment_"+commentId).append("<div id='reply'>" +
+                " <label style='font-size: 14px'>回复:</label>" +
+                " <textarea class='form-control' id='reply_main' rows='2' name='content' style='font-size: 12px'></textarea> " +
+                "<button id='subReply' class='btn btn-default replyButton glyphicon glyphicon-send' onclick='submitReply("+commentId+")'>发送</button> </div>")
+        }
+        
+        function submitReply(commentId) {
+            var req=new XMLHttpRequest();
+            req.open("GET","http://localhost:8080/saveReply?commentId="+commentId+"&username="+username+"&content="+
+                document.getElementById("reply_main").value,true);
+            req.send();
+            req.onreadystatechange=function () {
+                if (req.readyState==4&&req.status==200){
+                    alert("success");
+                }
+            }
+        }
+
+        function increStar(starId,star) {
+            var starReq=new XMLHttpRequest();
+            starReq.open("GET","http://localhost:8080/starIncre?id="+starId,true);
+            starReq.send();
+            starReq.onreadystatechange=function () {
+                if(starReq.readyState==4&&starReq.status==200){
+                    if(starReq.responseText==1){
+                        console.log("star: "+star)
+                        console.log(document.getElementById("star_"+starId));
+                        document.getElementById("star_"+starId).innerHTML=star+1;
+                    }
+                }
+            }
+        }
+
+
+        function incrementFavor(num) {
+            var id=getUrlParam("id");
+            var xmlHttpFavor=new XMLHttpRequest();
+            xmlHttpFavor.open("GET","http://localhost:8080/favorOperation?count="+num+"&id="+id,false);
+            xmlHttpFavor.send();
+            if (xmlHttpFavor.readyState==4 && xmlHttpFavor.status==200){
+                if(xmlHttpFavor.responseText=="1"){
+                    var save=parseInt($("#save").text())+1;
+                    $("#save").text(save);
+                }else if(xmlHttpFavor.responseText=="-1"){
+                    if(parseInt($("#save").text())!=0){
+                        var save=parseInt($("#save").text())-1;
+                        $("#save").text(save);
+                    }else {
+                        alert("出错了");
+                    }
+
+
+                }
+            }
+        }
+
+
+        function getUrlParam(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]); return null;
+        }
+
+
+        //设置cookie
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            var expires = "expires="+d.toUTCString();
+            document.cookie = cname + "=" + cvalue + "; " + expires;
+        }
+        //获取cookie
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1);
+                if (c.indexOf(name) != -1) return c.substring(name.length, c.length);
+            }
+            return "";
+        }
+        //清除cookie
+        function clearCookie(name) {
+            setCookie(name, "", -1);
+        }
+
+
+        function validateLogin() {
+
+            username=getCookie("username");
+            password=getCookie("password");
+            console.log("cookie: username:"+username);
+            console.log("cookie:password:"+password);
+
+            if(username==null||username==undefined||username==""){
+                username=getUrlParam("username");
+                if(username==null||username==undefined||username==""){}else {
+                    document.getElementById("registGo").style.display="none";
+                    document.getElementById("loginGo").style.display="none";
+                    $("#welcome").text(" ："+username);
+                    document.getElementById("welcome").style.display="inline-block";
+                }
+            }else {
+                console.log("进入请求");
+                var xmlHttpIsLogin=new XMLHttpRequest();
+                xmlHttpIsLogin.open("GET","http://localhost:8080/userlogin?username="+username+"&"+"password="+password,false);
+                xmlHttpIsLogin.send();
+                if (xmlHttpIsLogin.readyState==4 && xmlHttpIsLogin.status==200){
+                    if(xmlHttpIsLogin.responseText=="1"){
+                        document.getElementById("registGo").style.display="none";
+                        document.getElementById("loginGo").style.display="none";
+                        $("#welcome").text(" ："+username);
+                        document.getElementById("welcome").style.display="inline-block";
+                    }
+                }
+            }
+        }
+
+
+        function submitComment() {
+
+            console.log("post id: "+id);
+            var req=new XMLHttpRequest();
+            req.open("POST","http://localhost:8080/commentDealer?id="+id+"&content="+document.getElementById("comment_main").value,true);
+            req.send();
+            req.onreadystatechange=function () {
+                if (req.readyState==4&&req.status==200){
+                    alert("success");
+                }
+            }
+
+        }
+
+    </script>
+
+</head>
+<body>
+<nav class="top_bar navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" style="color: black;">CoderBBS</a>
+        <ul class="nav navbar-nav navbar-left">
+            <li><a id="writeGo" href="#"><span class="glyphicon glyphicon-edit" style="color: black;font-size: 14px">写博客</span></a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <button id="welcome" type="button" class="glyphicon glyphicon-user btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a href="/favorites.html"><span class="glyphicon glyphicon-star" style="color: rgb(0, 0, 0); font-size: 16px">&nbsp;我的收藏</span></a>
+                    </li>
+                    <li class="divider"></li>
+                    <li >
+                        <a href="#"><span class="glyphicon glyphicon-th-list" style="color: rgb(0, 0, 0);font-size: 16px;">&nbsp;用户信息</span></a>
+                    </li>
+                    <li class="divider"></li>
+                    <li>
+                        <a href="#"><span class="glyphicon glyphicon-cog" style="color: rgb(0, 0, 0);font-size: 16px;">&nbsp;设置</span></a>
+                    </li>
+                </ul>
+            </li>
+            <li><a id="registGo"><span class="glyphicon glyphicon-user"></span>注册</a></li>
+            <li><a id="loginGo"><span class="glyphicon glyphicon-log-in"></span>登录</a></li>
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div id="head">
+            <div>
+                <h1 id="title" class="text-left"></h1>
+                <div>
+                    <a><span id="favor" class="myheart"></span></a>
+                    <!--<span id="hasFavored" class="glyphicon glyphicon-heart myheart">已收藏</span>-->
+                </div>
+            </div>
+            <div id="author" class="text-right"></div>
+            <div id="date" class="text-right"></div>
+            <hr>
+            <div class="text-center">
+                <label>查阅：</label>
+                <span id="scan"></span>
+            </div>
+            <div class="text-center">
+                <label>收藏：</label>
+                <span id="save"></span>
+            </div>
+
+        </div>
+
+        <div id="mainBody">
+            <div id="content"></div>
+        </div>
+
+
+
+
+        <div id="comment">
+            <label style="font-size: 18px">评论:</label>
+            <hr>
+            <textarea class="form-control" id="comment_main" rows="6" name="content" style="font-size: 14px">说点什么吧...</textarea>
+
+            <button id="myButton" class="btn btn-default" onclick="submitComment()">提交</button>
+        </div>
+
+        <hr>
+        <hr>
+
+        <div id="showComment"></div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+</body>
+</html>

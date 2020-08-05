@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Editable WYSIWYG</title>
+    <script src="js/http_code.jquery.com_jquery-3.1.1.js"></script>
+    <link type="text/css" rel="stylesheet" href="js/bootstrap-3.3.5-dist/dist/css/bootstrap.css">
+    <link href="js/font-awesome-4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="js/bootstrap-3.3.5-dist/dist/js/bootstrap.js"></script>
+
+    <style>
+        .content{
+            margin-top: 100px;
+        }
+        #editor {
+            margin-left: 10%;
+            width: 80%;
+            height: 800px;
+            resize:vertical;
+            overflow:auto;
+            border:1px solid silver;
+            border-radius:5px;
+            min-height:100px;
+            box-shadow: inset 0 0 10px silver;
+            padding:1em;
+        }
+        .sub_btn{
+            display: inline;
+            margin-left: 80%;
+            width: 100px;
+            height:50px;
+        }
+        .info_input{
+            margin-left: 10%;
+            width: 80%;
+            height: 40px;
+            border:1px solid silver;
+            border-radius:5px;
+            padding:1em;
+            box-shadow: inset 0 0 10px silver;
+        }
+        #welcome{
+            margin-top: 8px;
+            margin-right: 10px;
+            display: none;
+            color: rgb(0, 0, 0);
+            font-size: 14px;
+        }
+
+    </style>
+
+    <script>
+
+        function validateLogin() {
+
+            var username = getCookie("username");
+            var password = getCookie("password");
+            console.log("cookie: username:" + username);
+            console.log("cookie:password:" + password);
+
+            if (username == null || username == undefined || username == "") {
+                username = getUrlParam("username");
+                if (username == null || username == undefined || username == "") {
+                } else {
+                    document.getElementById("registGo").style.display = "none";
+                    document.getElementById("loginGo").style.display = "none";
+                    $("#welcome").text(" ：" + username);
+                    document.getElementById("welcome").style.display = "inline-block";
+                }
+            } else {
+                console.log("进入请求");
+                var xmlHttpIsLogin = new XMLHttpRequest();
+                xmlHttpIsLogin.open("GET", "http://localhost:8080/userlogin?username=" + username + "&" + "password=" + password, false);
+                xmlHttpIsLogin.send();
+                if (xmlHttpIsLogin.readyState == 4 && xmlHttpIsLogin.status == 200) {
+                    if (xmlHttpIsLogin.responseText == "1") {
+                        document.getElementById("registGo").style.display = "none";
+                        document.getElementById("loginGo").style.display = "none";
+                        $("#welcome").text(" ：" + username);
+                        document.getElementById("welcome").style.display = "inline-block";
+                    }
+                }
+            }
+        }
+
+        //设置cookie
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            var expires = "expires="+d.toUTCString();
+            document.cookie = cname + "=" + cvalue + "; " + expires;
+        }
+        //获取cookie
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1);
+                if (c.indexOf(name) != -1) return c.substring(name.length, c.length);
+            }
+            return "";
+        }
+        //清除cookie
+        function clearCookie(name) {
+            setCookie(name, "", -1);
+        }
+
+        function getUrlParam(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]); return null;
+        }
+
+
+        function submitData() {
+
+            jQuery.ajax({
+                async:false,
+                type:"POST",
+                dataType:"JSON",
+                url:"/contentPost",
+                data:{
+                    "title":document.getElementById("inputTitle").value,
+                    "author":document.getElementById("inputAuthor").value,
+                    "content":document.getElementById("editor").innerHTML
+                },
+                success:function () {
+                    alert("success");
+                }
+            });
+
+//            var postData=new FormData();
+//            postData.append("title",document.getElementById("inputTitle").value);
+//            var req=new XMLHttpRequest();
+//            req.open("POST", "/imageUpload", false);
+//            req.send(postData);
+//            req.onreadystatechange=function () {
+//                console.log("title发送成功");
+//            };
+
+
+//            var formData=new FormData();
+//            formData.append("title",document.getElementById("inputTitle").value);
+//
+//            for (var i = 0; i < files.length; i++){
+//                console.log("文件数目："+files.length);
+//                var file=files[i];
+//                formData.append("myImage"+i,file);
+//                console.log("file:"+file.name);
+//            }
+//
+//            var xhr = new XMLHttpRequest();
+//            xhr.onreadystatechange = function() {
+//                if (xhr.readyState==4&&xhr.status==200){
+//                    console.log(xhr.responseText);
+//                    alert("成功");
+//
+//                }
+//            };
+//            xhr.open("POST", "/imageUpload", true);
+//            console.log("formData:"+formData);
+//            xhr.send(formData);
+
+
+        }
+
+
+
+        function readFile() {
+            console.log("进入readfile");
+            var input = document.getElementById("add");
+            console.log(this.files.length);
+            for (var i = 0; i < this.files.length; i++) {
+                if (!input['value'].match(/.jpg|.gif|.png|.bmp/i)) {　　//判断上传文件格式
+                    return alert("上传的图片格式不正确，请重新选择");
+                }
+                console.log(files.push(this.files[i]));
+                var reader = new FileReader();
+                reader.readAsDataURL(this.files[i]);
+                reader.onload = function (e) {
+                    console.log("onload");
+                    document.execCommand('insertImage', false, reader.result);
+                }
+            }
+        }
+
+
+
+        $(document).ready(function () {
+
+            $(window).bind('beforeunload',function(){
+                var logout=new XMLHttpRequest();
+                logout.open("POST","http://localhost:8080/logout?username="+username,true);
+                logout.send();
+            });
+
+//            $("#add").uploadify({
+//                buttonClass:'btn',
+//                height:50,
+//                width:100,
+//                buttonText:"添加图片",
+//                method:'POST',
+//                queueID: 'fileQueue',
+//                multi:true,
+//                auto:false,
+//                swf:"js/uploadify.swf",
+//                uploader:'/imageUpload',
+//                uploadLimit:10,
+//                removeTimeout:1,
+//                fileSizeLimit:4000,
+//                formData:{
+//                    'index':1,
+//                },
+//                onInit:function(){
+//                    $("div#"+$(this).attr("id")+"-button").removeClass("uploadify-button").addClass("btn btn-default glyphicon glyphicon-picture add");;
+//                },
+//                onUploadSuccess:function (file, data, response) {
+//                    alert("上传成功");
+//                },
+//                onSelect: function(file)
+//                {
+//                    console.log(file);
+//                    readFile(file);
+//                }
+//            });
+            files=new Array();
+
+            document.getElementById("addImage").onclick=function () {
+                $("#add").trigger("click");
+            }
+
+
+            document.getElementById("add").addEventListener('change',readFile,false);
+
+            $('#editControls a').click(function(e) {
+                switch($(this).data('role')) {
+                    case 'h1':
+                    case 'h2':
+                    case 'p':
+                        document.execCommand('formatBlock', false, '<' + $(this).data('role') + '>');
+                        break;
+                    default:
+                        document.execCommand($(this).data('role'), false, null);
+                        break;
+                }
+            });
+
+            validateLogin();
+
+        });
+
+
+
+
+    </script>
+
+</head>
+<body>
+
+<nav class="top_bar navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" style="color: black;">CoderBBS</a>
+        <ul class="nav navbar-nav navbar-left">
+            <li><a id="writeGo" href="#"><span class="glyphicon glyphicon-edit" style="color: black;font-size: 14px">写博客</span></a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <button id="welcome" type="button" class="glyphicon glyphicon-user btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a href="/favorites.html"><span class="glyphicon glyphicon-star" style="color: rgb(0, 0, 0); font-size: 16px">&nbsp;我的收藏</span></a>
+                    </li>
+                    <li class="divider"></li>
+                    <li >
+                        <a href="#"><span class="glyphicon glyphicon-th-list" style="color: rgb(0, 0, 0);font-size: 16px;">&nbsp;用户信息</span></a>
+                    </li>
+                    <li class="divider"></li>
+                    <li>
+                        <a href="#"><span class="glyphicon glyphicon-cog" style="color: rgb(0, 0, 0);font-size: 16px;">&nbsp;设置</span></a>
+                    </li>
+                </ul>
+            </li>
+            <li><a id="registGo"><span class="glyphicon glyphicon-user"></span>注册</a></li>
+            <li><a id="loginGo"><span class="glyphicon glyphicon-log-in"></span>登录</a></li>
+        </ul>
+    </div>
+</nav>
+
+
+
+
+<div class="content">
+    <div class="container-fluid">
+
+        <input type="text" class="info_input" id="inputTitle" placeholder="标题" name="title">
+        <hr>
+        <input type="text" class="info_input" id="inputAuthor" placeholder="作者" name="author">
+        <hr>
+        <div id='pad-wrapper'>
+            <div id="editparent">
+                <div id='editControls' class='span12' style='text-align:center; padding:5px;'>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='undo' href='#'><i class='fa fa-undo'></i></a>
+                        <a class='btn' data-role='redo' href='#'><i class='fa fa-repeat'></i></a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='bold' href='#'><b>Bold</b></a>
+                        <a class='btn' data-role='italic' href='#'><em>Italic</em></a>
+                        <a class='btn' data-role='underline' href='#'><u><b>U</b></u></a>
+                        <a class='btn' data-role='strikeThrough' href='#'><strike>abc</strike></a>
+                    </div>
+                    <div>
+                        <a id="addImage" class='btn'><i class='fa fa-file-image-o'></i></a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='justifyLeft' href='#'><i class='fa fa-align-left'></i></a>
+                        <a class='btn' data-role='justifyCenter' href='#'><i class='fa fa-align-center'></i></a>
+                        <a class='btn' data-role='justifyRight' href='#'><i class='fa fa-align-right'></i></a>
+                        <a class='btn' data-role='justifyFull' href='#'><i class='fa fa-align-justify'></i></a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='indent' href='#'><i class='fa fa-indent'></i></a>
+                        <a class='btn' data-role='outdent' href='#'><i class='fa fa-outdent'></i></a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='insertUnorderedList' href='#'><i class='fa fa-list-ul'></i></a>
+                        <a class='btn' data-role='insertOrderedList' href='#'><i class='fa fa-list-ol'></i></a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='h1' href='#'>h<sup>1</sup></a>
+                        <a class='btn' data-role='h2' href='#'>h<sup>2</sup></a>
+                        <a class='btn' data-role='p' href='#'>p</a>
+                    </div>
+                    <div class='btn-group'>
+                        <a class='btn' data-role='subscript' href='#'><i class='fa fa-subscript'></i></a>
+                        <a class='btn' data-role='superscript' href='#'><i class='fa fa-superscript'></i></a>
+                    </div>
+                </div>
+                <div id='editor' class='span12' style='' contenteditable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr>
+<div>
+    <input name="myImage" multiple type="file" id="add" style="display: none"/>
+</div>
+
+<div>
+    <button id="sub_btn" class="btn btn-default glyphicon glyphicon-ok sub_btn" type="button" onclick="submitData()"><span>提交</span></button>
+</div>
+
+
+
+</body>
+</html>

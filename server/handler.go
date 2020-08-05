@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/HarvestStars/cigar-bbs/server/db"
+	"github.com/HarvestStars/cigar-bbs/server/protocol"
 	"github.com/HarvestStars/cigar-bbs/server/util/common"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -30,8 +31,10 @@ func SignUp(c *gin.Context) {
 }
 
 func LogIn(c *gin.Context) {
-	userName := c.PostForm("name")
-	passWord := c.PostForm("password")
+	req := &protocol.UserReq{}
+	c.Bind(req)
+	userName := req.UserName
+	passWord := req.PassWord
 	// 判断是否已经存在
 	var user db.User
 	isExisted := user.Exist(userName)
@@ -50,9 +53,10 @@ func LogIn(c *gin.Context) {
 		s.User = user
 		s.Create()
 		c.SetCookie("_sessionID", s.UUID, 3600, "/", "localhost", false, true)
-		c.JSON(http.StatusBadRequest, gin.H{"code": 200, "data": "登录成功", "error": ""})
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.JSON(http.StatusOK, gin.H{"code": 200, "data": "登录成功", "error": ""})
 	} else {
-		c.JSON(http.StatusOK, gin.H{"code": 400, "data": "账户不存在，请注册", "error": ""})
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "账户不存在，请注册", "error": ""})
 	}
 }
 
