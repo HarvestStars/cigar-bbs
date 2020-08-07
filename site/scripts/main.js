@@ -9,7 +9,6 @@ $(document).ready(function () {
 
     // POST传参序列化 
     axios.interceptors.request.use((config) => {
-        //config.withCredentials=true;
         if(config.method === 'post') {
             config.data = qs.stringify(config.data);
         }
@@ -20,7 +19,7 @@ $(document).ready(function () {
     
     $(window).bind('beforeunload',function(){
         // var logout=new XMLHttpRequest();
-        // logout.open("POST","http://localhost:8080/logout?username="+username,true);
+        // logout.open("GET","http://localhost:8080/logout",true);
         // logout.send();
     });
 
@@ -89,6 +88,14 @@ $(document).ready(function () {
             console.log(error)
           });
     })
+
+        //用户注册信息提交
+        $("#logout").click(function (){
+            var logout=new XMLHttpRequest();
+            logout.open("GET","http://localhost:8080/logout",true);
+            logout.send();
+            document.cookie = "_username=; _sessionID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        })
 
     reqInfo();
 });
