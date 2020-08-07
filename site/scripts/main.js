@@ -62,7 +62,7 @@ $(document).ready(function () {
             if (response.data.code == 200){
                 location.assign("./index.html?username="+document.getElementById("inputTel").value);
             }else{
-                alert("账户未注册或密码错误！");
+                bootbox.alert("账户未注册或密码错误！");
             }
           })
           .catch(function (error) {
