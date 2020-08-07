@@ -12,11 +12,15 @@ func main() {
 
 	r := gin.Default()
 
+	// index
+	r.Static("/static", "../site")
+
 	// auth 登录
 	r.POST("/signup", SignUp)
 	r.POST("/login", LogIn)
 	r.POST("/admin", Admin)
 	r.GET("/logout", LogOut)
+	r.GET("/islogin", CheckLogIn)
 
 	// post 发帖
 	r.POST("/posts/read", readPost)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Cigar BBS 首页</title>
-    <link rel="stylesheet" href="styles/index.css" >
+    <link rel="stylesheet" href="styles/main.css" >
     <link type="text/css" rel="stylesheet" href="scripts/bootstrap-3.3.5-dist/dist/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="styles/styles.css">
     <link rel="stylesheet" type="text/css" href="styles/main.css">
@@ -143,7 +143,7 @@
             </div>
             <div class="modal-body">
 
-                <form class="form-horizontal" id="userFormRegist" target="tempFrame" action="/userregist" method="get">
+                <div class="form-horizontal" id="userFormRegist">
                     <span class="heading">注册信息</span>
                     <div class="form-group">
                         <input type="tel" class="form-control" id="inputTelRegist" placeholder="用户名" name="username">
@@ -161,9 +161,9 @@
                         <input type="number" class="form-control" id="inputAgeRegist" placeholder="年龄" name="age">
                     </div>
                     <div class="form-group">
-                        <button id="regist_btn" type="submit" class="btn btn-default">注册</button>
+                        <button type="button" id="signUpButton" class="btn btn-default">注册</button>
                     </div>
-                </form>
+                </div>
 
             </div>
 

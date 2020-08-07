@@ -5,10 +5,11 @@ $(document).ready(function () {
     var qs = Qs
     axios.defaults.headers.post['Content-Type'] = 
     'application/x-www-form-urlencoded;charset=UTF-8';  
-  
-    
+    axios.defaults.withCredentials = true;
+
     // POST传参序列化 
     axios.interceptors.request.use((config) => {
+        //config.withCredentials=true;
         if(config.method === 'post') {
             config.data = qs.stringify(config.data);
         }
@@ -18,15 +19,14 @@ $(document).ready(function () {
     });
     
     $(window).bind('beforeunload',function(){
-        var logout=new XMLHttpRequest();
-        logout.open("POST","http://localhost:8080/logout?username="+username,true);
-        logout.send();
+        // var logout=new XMLHttpRequest();
+        // logout.open("POST","http://localhost:8080/logout?username="+username,true);
+        // logout.send();
     });
-
 
     validateLogin();
 
-    isNewReply();
+    //isNewReply();
 
     //轮播设置
     $('.carousel').carousel({
@@ -51,11 +51,8 @@ $(document).ready(function () {
     $("#commentGo").click(function () {
        location.assign("/myComment.html");
     });
-    //准备ajaxform
-    var loginOptions={
-        success:showLoginResponse
-    };
-    //
+
+    //监听用户登录提交 
     $("#loginButton").click(function (){
         var name = document.getElementById("inputTel").value;
         var password = document.getElementById("inputPassword").value;
@@ -64,45 +61,40 @@ $(document).ready(function () {
             PassWord:password
         }).then((response) => {
             if (response.data.code == 200){
-                window.location.href="./index.html";
+                location.assign("./index.html?username="+document.getElementById("inputTel").value);
             }else{
-                return
+                alert("账户未注册或密码错误！");
             }
           })
           .catch(function (error) {
             console.log(error)
           });
     })
-    //监听用户登录提交 
-    $("#userFormLogin").submit(function () {
-        axios.get('/user?ID=12345')
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
 
-        // console.log("2222222222222222222");
-        // $(this).ajaxSubmit(loginOptions);
-        //return false;
-    });
     //用户注册信息提交
-    var registOptions={
-        success:showRegistResponse
-    };
-    $("#userFormRegist").submit(function () {
-        console.log("注册");
-        $(this).ajaxSubmit(registOptions);
-        return false;
-    });
+    $("#signUpButton").click(function (){
+        var name = document.getElementById("inputTelRegist").value;
+        var password = document.getElementById("inputPasswordRegist").value;
+        axios.post('http://localhost:8080/signup', {
+            UserName:name,
+            PassWord:password
+        }).then((response) => {
+            if (response.data.code == 200){
+                bootbox.alert("注册成功", function() {});
+            }else{
+                bootbox.alert("该用户已注册",function () {});
+            }
+          })
+          .catch(function (error) {
+            console.log(error)
+          });
+    })
 
     reqInfo();
 });
 
 //这个功能还没想好
 function isNewReply() {
-
     var req=new XMLHttpRequest();
     req.open("GET","http://localhost:8080/isNewReply?username="+username,true);
     req.send();
@@ -116,67 +108,36 @@ function isNewReply() {
 
 }
 
-//登录后的回调函数
-function showLoginResponse(responseText,statusText){
-
-    console.log(responseText);
-    console.log(statusText);
-    var resp=responseText;
-    if (resp=="1"){
-        console.log("ok");
-        location.assign("/index.html?username="+document.getElementById("inputTel").value);
-    }else if(resp=="2"){
-        alert("密码输入错误！");
-    }else if(resp=="3"){
-        alert("用户尚未注册！");
-    }
-
-}
-//注册后的回调函数
-function showRegistResponse(responseText,statusText) {
-    console.log(responseText);
-    console.log(statusText);
-    var resp=responseText;
-    if(resp=="ok"){
-        bootbox.alert("注册成功", function() {});
-    }else if(resp=="exsit"){
-        bootbox.alert("该用户已注册",function () {});
-    }
-}
-
-
-
 //检查用户是否登录
 function validateLogin() {
-
-username=getCookie("username");
-password=getCookie("password");
-console.log("cookie: username:"+username);
-console.log("cookie:password:"+password);
-
-if(username==null||username==undefined||username==""){
-    username=getUrlParam("username");
-    if(username==null||username==undefined||username==""){}else {
-        document.getElementById("registGo").style.display="none";
-        document.getElementById("loginGo").style.display="none";
-        $("#welcome").text(" ："+username);
-        document.getElementById("welcome").style.display="block";
-        $("#commentGo").removeClass("commentGo");
-    }
-}else {
-    console.log("进入请求");
-    var xmlHttpIsLogin=new XMLHttpRequest();
-    xmlHttpIsLogin.open("GET","http://localhost:8080/userlogin?username="+username+"&"+"password="+password,false);
-    xmlHttpIsLogin.send();
-    if (xmlHttpIsLogin.readyState==4 && xmlHttpIsLogin.status==200){
-        if(xmlHttpIsLogin.responseText=="1"){
+    username=getCookie("_username");
+    sessionID=getCookie("_sessionID");
+    if(sessionID==null||sessionID==undefined||sessionID==""){}else{
+        var xmlHttpIsLogin=new XMLHttpRequest();
+        xmlHttpIsLogin.open("GET","http://localhost:8080/islogin?session="+sessionID,false);
+        xmlHttpIsLogin.send();
+        if (xmlHttpIsLogin.readyState==4 && xmlHttpIsLogin.status==200){
             document.getElementById("registGo").style.display="none";
             document.getElementById("loginGo").style.display="none";
             $("#welcome").text(" ："+username);
             document.getElementById("welcome").style.display="block";
+            $("#commentGo").removeClass("commentGo");
         }
     }
-}
+    // }else {
+    //     console.log("进入请求");
+    //     var xmlHttpIsLogin=new XMLHttpRequest();
+    //     xmlHttpIsLogin.open("GET","http://localhost:8080/userlogin?username="+username+"&"+"password="+password,false);
+    //     xmlHttpIsLogin.send();
+    //     if (xmlHttpIsLogin.readyState==4 && xmlHttpIsLogin.status==200){
+    //         if(xmlHttpIsLogin.responseText=="1"){
+    //             document.getElementById("registGo").style.display="none";
+    //             document.getElementById("loginGo").style.display="none";
+    //             $("#welcome").text(" ："+username);
+    //             document.getElementById("welcome").style.display="block";
+    //         }
+    //     }
+    // }
 }
 
 //获取地址栏参数
@@ -247,13 +208,6 @@ function reqInfo() {
                   "<td class='scanTd'><a id='scan_"+i+"' href='"+"/blogShow.html?id="+i+"&username="+username+"&password="+password+"'>"+post[0]["scan"]+"</a></td>"
                   +
                   "<td class='saveTd'><a id='save_"+i+"' href='"+"/blogShow.html?id="+i+"&username="+username+"&password="+password+"'>"+post[0]["favor"]+"</a></td></tr>" );
-
-
-//                      document.getElementById("title_"+(i%15==0?15:i%15)).setAttribute("href","/blogShow.html?id="+i+"&username="+username+"&password="+password);
-//                      document.getElementById("author_"+(i%15==0?15:i%15)).setAttribute("href","/blogShow.html?id="+i+"&username="+username+"&password="+password);
-//                      document.getElementById("date_"+(i%15==0?15:i%15)).setAttribute("href","/blogShow.html?id="+i+"&username="+username+"&password="+password);
-//                      document.getElementById("scan_"+(i%15==0?15:i%15)).setAttribute("href","/blogShow.html?id="+i+"&username="+username+"&password="+password);
-//                      document.getElementById("save_"+(i%15==0?15:i%15)).setAttribute("href","/blogShow.html?id="+i+"&username="+username+"&password="+password);
           }
 
       }else{
