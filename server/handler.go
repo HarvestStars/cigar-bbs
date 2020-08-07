@@ -45,7 +45,11 @@ func LogIn(c *gin.Context) {
 		user.ReadByName(userName)
 		isOk := user.PassWordCmp(passWord)
 		if !isOk {
-			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "用户名密码错误", "error": ""})
+			origin := c.GetHeader("Origin")
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
+			c.Header("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept")
+			c.JSON(http.StatusOK, gin.H{"code": 400, "data": "用户名密码错误", "error": ""})
 			return
 		}
 
@@ -63,8 +67,11 @@ func LogIn(c *gin.Context) {
 		c.Header("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept")
 		c.JSON(http.StatusOK, gin.H{"code": 200, "data": "登录成功", "error": ""})
 	} else {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "data": "账户不存在，请注册", "error": ""})
+		origin := c.GetHeader("Origin")
+		c.Header("Access-Control-Allow-Origin", origin)
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept")
+		c.JSON(http.StatusOK, gin.H{"code": 400, "data": "账户不存在，请注册", "error": ""})
 	}
 }
 
